@@ -16,63 +16,121 @@
             --destructive: #ff3b30;
             --positive: #34c759;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-color); padding: 16px; margin: 0; user-select: none; }
-        .card { background-color: var(--bg-color); border-radius: 14px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--secondary-bg); }
-        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--secondary-bg); }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding: 16px; 
+            margin: 0; 
+            user-select: none;
+        }
+
+        .card {
+            background-color: var(--bg-color);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid var(--secondary-bg);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--secondary-bg);
+        }
         .setting-item:last-child { border-bottom: none; }
+
+        /* TOGGLE SWITCH */
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--secondary-bg); border-radius: 34px; transition: .3s; }
         .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: var(--positive); }
         input:checked + .slider:before { transform: translateX(22px); }
-        textarea { width: 100%; border: 1px solid var(--secondary-bg); background: var(--secondary-bg); border-radius: 10px; padding: 10px; color: var(--text-color); font-size: 14px; resize: none; box-sizing: border-box; }
-        button { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; background-color: var(--btn-color); color: var(--btn-text); cursor: pointer; margin-top: 10px; }
+
+        textarea {
+            width: 100%;
+            border: 1px solid var(--secondary-bg);
+            background: var(--secondary-bg);
+            border-radius: 10px;
+            padding: 10px;
+            color: var(--text-color);
+            font-size: 14px;
+            resize: none;
+            box-sizing: border-box;
+        }
+        textarea:focus { border-color: var(--btn-color); outline: none; background: var(--bg-color); }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            background-color: var(--btn-color);
+            color: var(--btn-text);
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+
         h3 { margin: 0 0 15px 0; font-size: 18px; }
-        h4 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: var(--hint-color); }
+        h4 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: var(--hint-color); letter-spacing: 0.5px; }
+
         .status-on { color: var(--positive); font-weight: bold; }
         .status-off { color: var(--destructive); font-weight: bold; }
+        .info-text { font-size: 13px; color: var(--hint-color); margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Состояние</h3>
             <span id="status-text" class="status-off">OFFLINE</span>
         </div>
-        <div style="font-size: 13px; color: var(--hint-color); margin-top: 5px;">
-            Подписка до: <b id="sub-date" style="color: var(--text-color)">...</b>
+        <div class="info-text">
+            Подписка активна до: <b id="sub-date" style="color: var(--text-color)">...</b>
         </div>
     </div>
 
     <div class="card">
         <h4>Где ловить сообщения?</h4>
+        
         <div class="setting-item">
             <span>Личные сообщения (ЛС)</span>
             <label class="switch"><input type="checkbox" id="opt_pm"><span class="slider"></span></label>
         </div>
+        
         <div class="setting-item">
             <span>Группы и Каналы</span>
             <label class="switch"><input type="checkbox" id="opt_groups"><span class="slider"></span></label>
         </div>
         
-        <h4 style="margin-top: 15px;">Исключения</h4>
-        <textarea id="opt_ignore" rows="2" placeholder="ID чатов через запятую..."></textarea>
+        <h4 style="margin-top: 20px;">Исключения (ID чатов)</h4>
+        <textarea id="opt_ignore" rows="2" placeholder="Например: 12345678, -100987654..."></textarea>
     </div>
 
     <div class="card">
-        <h4>Что уведомлять?</h4>
+        <h4>Типы событий</h4>
+        
         <div class="setting-item">
             <span>Удаленные сообщения</span>
             <label class="switch"><input type="checkbox" id="opt_del"><span class="slider"></span></label>
         </div>
+        
         <div class="setting-item">
             <span>Измененные сообщения</span>
             <label class="switch"><input type="checkbox" id="opt_edit"><span class="slider"></span></label>
         </div>
+        
         <div class="setting-item">
-            <span>Исчезающие (ViewOnce)</span>
+            <span>Исчезающие (Self-destruct)</span>
             <label class="switch"><input type="checkbox" id="opt_vo"><span class="slider"></span></label>
         </div>
     </div>
@@ -83,15 +141,19 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // 1. Чтение параметров из URL
         const params = new URLSearchParams(window.location.search);
-        
+
         // Статус
         const isRunning = params.get('running') === '1';
-        document.getElementById('status-text').innerText = isRunning ? 'ONLINE' : 'OFFLINE';
-        document.getElementById('status-text').className = isRunning ? 'status-on' : 'status-off';
-        document.getElementById('sub-date').innerText = params.get('sub') || '...';
+        const subDate = params.get('sub') || '...';
+        
+        const statusEl = document.getElementById('status-text');
+        statusEl.innerText = isRunning ? 'ONLINE' : 'OFFLINE';
+        statusEl.className = isRunning ? 'status-on' : 'status-off';
+        document.getElementById('sub-date').innerText = subDate;
 
-        // Настройки (1 - on, 0 - off)
+        // Чекбоксы (1 = true, 0 = false)
         document.getElementById('opt_pm').checked = params.get('pm') === '1';
         document.getElementById('opt_groups').checked = params.get('groups') === '1';
         
@@ -99,8 +161,11 @@
         document.getElementById('opt_edit').checked = params.get('edit') === '1';
         document.getElementById('opt_vo').checked = params.get('vo') === '1';
 
-        document.getElementById('opt_ignore').value = decodeURIComponent(params.get('ignore') || "");
+        // Игнор лист (декодирование)
+        const ignoreRaw = params.get('ignore') || "";
+        document.getElementById('opt_ignore').value = decodeURIComponent(ignoreRaw);
 
+        // 2. Сохранение
         function saveSettings() {
             const settings = {
                 track_pm: document.getElementById('opt_pm').checked,
@@ -112,7 +177,11 @@
                 },
                 ignore_chats_str: document.getElementById('opt_ignore').value
             };
-            tg.sendData(JSON.stringify({ action: "save_settings", settings: settings }));
+
+            tg.sendData(JSON.stringify({
+                action: "save_settings",
+                settings: settings
+            }));
         }
     </script>
 </body>
